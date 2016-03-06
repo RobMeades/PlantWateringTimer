@@ -5,10 +5,21 @@
  * Created on 05 March 2016, 13:25
  */
 
-
 #include <xc.h>
 #include "usb\usb_device.h"
 #include "usb\usb_device_cdc.h"
+
+/********************************************************
+ * MACROS
+ *******************************************************/
+
+#define LED_PIN_LAT     LATAbits.LATA5 
+#define BUTTON_PIN_LAT  LATAbits.LATA4 
+#define LED_PIN_PORT     PORTAbits.RA5 
+#define BUTTON_PIN_PORT  PORTAbits.RA4 
+#define LED_PIN_TRIS     TRISAbits.TRISA5 
+#define BUTTON_PIN_TRIS  TRISAbits.TRISA4 
+#define BUTTON_PIN_WPU  WPUAbits.WPUA4
 
 /********************************************************
  * PRIVATE VARIABLES
@@ -37,6 +48,15 @@ static void appInit()
 /* The application entry point */
 static void appMain(void)
 {
+    if (!PORTAbits.RA4)
+    {
+        LATAbits.LATA5 = 1;
+    }
+    else
+    {
+        LATAbits.LATA5 = 0;
+    }
+    
     if (USBUSARTIsTxTrfReady())
     {
         uint8_t i;
@@ -45,7 +65,7 @@ static void appMain(void)
         numBytesRead = getsUSBUSART(readBuffer, sizeof(readBuffer));
 
         /* For every byte that was read... */
-        for(i=0; i<numBytesRead; i++)
+        for (i = 0; i < numBytesRead; i++)
         {
             switch(readBuffer[i])
             {
@@ -68,12 +88,12 @@ static void appMain(void)
             }
         }
 
-        if(numBytesRead > 0)
+        if (numBytesRead > 0)
         {
             /* After processing all of the received data, we need to send out
              * the "echo" data now.
              */
-            putUSBUSART(writeBuffer,numBytesRead);
+            putUSBUSART(writeBuffer, numBytesRead);
         }
     }
     
@@ -89,13 +109,13 @@ static void appMain(void)
  * when USB_INTERRUPT is defined. */
 bool USER_USB_CALLBACK_EVENT_HANDLER(USB_EVENT event, void *pdata, uint16_t size)
 {
-    switch( (int) event )
+    switch ((int) event)
     {
         case EVENT_TRANSFER:
-            break;
+        break;
 
         case EVENT_SOF:
-            break;
+        break;
 
         case EVENT_SUSPEND:
             /* Call the hardware platform specific handler for suspend events for
@@ -106,7 +126,7 @@ bool USER_USB_CALLBACK_EVENT_HANDLER(USB_EVENT event, void *pdata, uint16_t size
              * don't consume power from the host.
              */
             SYSTEM_Initialize(SYSTEM_STATE_USB_SUSPEND);
-            break;
+        break;
 
         case EVENT_RESUME:
             /* Call the hardware platform specific resume from suspend handler (ex: to
@@ -115,31 +135,31 @@ bool USER_USB_CALLBACK_EVENT_HANDLER(USB_EVENT event, void *pdata, uint16_t size
              * of the suspend condition.
              */
             SYSTEM_Initialize(SYSTEM_STATE_USB_RESUME);
-            break;
+        break;
 
         case EVENT_CONFIGURED:
             /* When the device is configured, we can (re)initialize the 
              * demo code. */
             appInit();
-            break;
+        break;
 
         case EVENT_SET_DESCRIPTOR:
-            break;
+        break;
 
         case EVENT_EP0_REQUEST:
             /* We have received a non-standard USB request.  The HID driver
              * needs to check to see if the request was for it. */
             USBCheckCDCRequest();
-            break;
+        break;
 
         case EVENT_BUS_ERROR:
-            break;
+        break;
 
         case EVENT_TRANSFER_TERMINATED:
-            break;
+        break;
 
         default:
-            break;
+        break;
     }
     
     return true;
@@ -148,12 +168,29 @@ bool USER_USB_CALLBACK_EVENT_HANDLER(USB_EVENT event, void *pdata, uint16_t size
 /* Main */
 void main(void)
 {
+    /* Make sure RA4/RA5 are used for digital */
+    ANSELAbits.ANSELA = 0;
+    
+    /* Enable pull-ups */
+    OPTION_REGbits.nWPUEN = 0;
+    
+    /* LED pin is an output */
+    LED_PIN_PORT = 0;
+    LED_PIN_LAT = 0;
+    LED_PIN_TRIS = 0;
+    
+    /* Button pin is an input with weak pull-up */
+    BUTTON_PIN_PORT = 0;
+    BUTTON_PIN_LAT = 0;
+    BUTTON_PIN_WPU = 1;
+    BUTTON_PIN_TRIS = 1;
+
     SYSTEM_Initialize(SYSTEM_STATE_USB_START);
 
     USBDeviceInit();
     USBDeviceAttach();
     
-    while(1)
+    while (1)
     {
         SYSTEM_Tasks();
 
@@ -163,7 +200,7 @@ void main(void)
 
         /* If the USB device is configured and not suspended then do
          * application stuff */
-        if( USBGetDeviceState() >= CONFIGURED_STATE && !USBIsDeviceSuspended())
+        if ((USBGetDeviceState() >= CONFIGURED_STATE) && !USBIsDeviceSuspended())
         {
             appMain();
         }

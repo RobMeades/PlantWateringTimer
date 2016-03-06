@@ -17,7 +17,6 @@
         <itemPath>usb/system.h</itemPath>
         <itemPath>usb/fixed_address_memory.h</itemPath>
         <itemPath>usb/io_mapping.h</itemPath>
-        <itemPath>usb/leds.h</itemPath>
         <itemPath>usb/system_config.h</itemPath>
       </logicalFolder>
     </logicalFolder>
@@ -35,7 +34,6 @@
         <itemPath>usb/system.c</itemPath>
       </logicalFolder>
       <itemPath>main.c</itemPath>
-      <itemPath>usb/leds.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -152,6 +150,7 @@
         <property key="ToolFirmwareFilePath"
                   value="Press to browse for a specific firmware version"/>
         <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
+        <property key="firmware.download.all" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
         <property key="memories.aux" value="false"/>
         <property key="memories.bootflash" value="true"/>

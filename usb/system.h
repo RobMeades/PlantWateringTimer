@@ -26,8 +26,6 @@
 #include <xc.h>
 #include <stdbool.h>
 
-#include "leds.h"
-
 #include "io_mapping.h"
 #include "fixed_address_memory.h"
 

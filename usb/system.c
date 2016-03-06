@@ -53,6 +53,7 @@
     #pragma config FOSC = HS        // Oscillator Selection Bits (HS Oscillator, High-speed crystal/resonator connected between OSC1 and OSC2 pins)
     #pragma config WDTE = OFF       // Watchdog Timer Enable (WDT disabled)
     #pragma config PWRTE = OFF      // Power-up Timer Enable (PWRT disabled)
+    // Don't do this as the debugger needs it
     //#pragma config MCLRE = OFF      // MCLR Pin Function Select (MCLR/VPP pin function is digital input)
     #pragma config CP = OFF         // Flash Program Memory Code Protection (Program memory code protection is disabled)
     #pragma config BOREN = ON       // Brown-out Reset Enable (Brown-out Reset enabled)
@@ -95,7 +96,6 @@ void SYSTEM_Initialize( SYSTEM_STATE state )
                 OSCCON = 0xFC;  //HFINTOSC @ 16MHz, 3X PLL, PLL enabled
                 ACTCON = 0x90;  //Active clock tuning enabled for USB
             #endif
-            LED_Enable(LED_USB_DEVICE_STATE);
             break;
             
         case SYSTEM_STATE_USB_SUSPEND: 
