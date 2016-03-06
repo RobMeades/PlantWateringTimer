@@ -25,12 +25,13 @@
 #include "usb.h"
 
 /** CONFIGURATION Bits **********************************************/
-// PIC16F1459 configuration bit settings:
+// PIC16F145x configuration bit settings:
 #if defined (USE_INTERNAL_OSC)	    // Define this in system.h if using the HFINTOSC for USB operation
     // CONFIG1
     #pragma config FOSC = INTOSC    // Oscillator Selection Bits (INTOSC oscillator: I/O function on CLKIN pin)
-    #pragma config WDTE = OFF       // Watchdog Timer Enable (WDT disabled)
+    #pragma config WDTE = SWDTEN    // Watchdog Timer Enable (controlled by SWDTEN)
     #pragma config PWRTE = OFF      // Power-up Timer Enable (PWRT disabled)
+    // Don't do this as the debugger needs it
     //#pragma config MCLRE = OFF      // MCLR Pin Function Select (MCLR/VPP pin function is digital input)
     #pragma config CP = OFF         // Flash Program Memory Code Protection (Program memory code protection is disabled)
     #pragma config BOREN = ON       // Brown-out Reset Enable (Brown-out Reset enabled)
@@ -51,7 +52,7 @@
 #else
     // CONFIG1
     #pragma config FOSC = HS        // Oscillator Selection Bits (HS Oscillator, High-speed crystal/resonator connected between OSC1 and OSC2 pins)
-    #pragma config WDTE = OFF       // Watchdog Timer Enable (WDT disabled)
+    #pragma config WDTE = SWDTEN    // Watchdog Timer Enable (controlled by SWDTEN)
     #pragma config PWRTE = OFF      // Power-up Timer Enable (PWRT disabled)
     // Don't do this as the debugger needs it
     //#pragma config MCLRE = OFF      // MCLR Pin Function Select (MCLR/VPP pin function is digital input)
@@ -90,12 +91,12 @@ void SYSTEM_Initialize( SYSTEM_STATE state )
     switch(state)
     {
         case SYSTEM_STATE_USB_START:
-            #if defined(USE_INTERNAL_OSC)
+#if defined(USE_INTERNAL_OSC)
                 //Make sure to turn on active clock tuning for USB full speed 
                 //operation from the INTOSC
                 OSCCON = 0xFC;  //HFINTOSC @ 16MHz, 3X PLL, PLL enabled
                 ACTCON = 0x90;  //Active clock tuning enabled for USB
-            #endif
+#endif
             break;
             
         case SYSTEM_STATE_USB_SUSPEND: 
@@ -105,12 +106,13 @@ void SYSTEM_Initialize( SYSTEM_STATE state )
             break;
     }
 }
-
-			
 			
 void interrupt SYS_InterruptHigh(void)
 {
 #if defined(USB_INTERRUPT)
-    USBDeviceTasks();
+    if (PIR2bits.USBIF)
+    {
+        USBDeviceTasks();
+    }
 #endif
 }

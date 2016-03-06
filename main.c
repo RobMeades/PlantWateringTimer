@@ -27,6 +27,7 @@
 
 static uint8_t readBuffer[CDC_DATA_OUT_EP_SIZE];
 static uint8_t writeBuffer[CDC_DATA_IN_EP_SIZE];
+static uint32_t wakeupCount = 0;
 
 /********************************************************
  * STATIC FUNCTION PROTOTYPES
@@ -48,15 +49,6 @@ static void appInit()
 /* The application entry point */
 static void appMain(void)
 {
-    if (!PORTAbits.RA4)
-    {
-        LATAbits.LATA5 = 1;
-    }
-    else
-    {
-        LATAbits.LATA5 = 0;
-    }
-    
     if (USBUSARTIsTxTrfReady())
     {
         uint8_t i;
@@ -171,6 +163,16 @@ void main(void)
     /* Make sure RA4/RA5 are used for digital */
     ANSELAbits.ANSELA = 0;
     
+    /* Set unused pins to be inputs */
+    LATCbits.LATC2 = 0;
+    TRISCbits.TRISC2 = 1;
+    LATCbits.LATC3 = 0;
+    TRISCbits.TRISC4 = 1;
+    LATCbits.LATC4 = 0;
+    TRISCbits.TRISC4 = 1;
+    LATCbits.LATC5 = 0;
+    TRISCbits.TRISC5 = 1;
+    
     /* Enable pull-ups */
     OPTION_REGbits.nWPUEN = 0;
     
@@ -184,20 +186,43 @@ void main(void)
     BUTTON_PIN_LAT = 0;
     BUTTON_PIN_WPU = 1;
     BUTTON_PIN_TRIS = 1;
+    
+    /* Set up the watchdog timer to be software controlled */
+    WDTCONbits.SWDTEN = 0;
+
+    /* Set up Timer0 to run from instruction cycles with 256 prescaler */
+    OPTION_REGbits.TMR0CS = 0;
+    OPTION_REGbits.PS = 0x7;
+    OPTION_REGbits.PSA = 0;
 
     SYSTEM_Initialize(SYSTEM_STATE_USB_START);
 
+    while (1)
+    {
+        WDTCONbits.WDTPS = 0x0c;
+        WDTCONbits.SWDTEN = 1;
+
+        SLEEP();
+        WDTCONbits.SWDTEN = 0;
+        wakeupCount++;
+
+        if (BUTTON_PIN_PORT)
+        {
+            LED_PIN_LAT = 1;
+
+            TMR0bits.TMR0 = 0;
+            INTCONbits.TMR0IF = 0;
+            while (!INTCONbits.TMR0IF) {};
+            INTCONbits.TMR0IF = 0;
+            LED_PIN_LAT = 0;
+        }
+    }
+    
     USBDeviceInit();
     USBDeviceAttach();
     
     while (1)
     {
-        SYSTEM_Tasks();
-
-#if defined(USB_POLLING)
-        USBDeviceTasks();
-#endif
-
         /* If the USB device is configured and not suspended then do
          * application stuff */
         if ((USBGetDeviceState() >= CONFIGURED_STATE) && !USBIsDeviceSuspended())

@@ -188,9 +188,9 @@
 
 //#define USB_CDC_SUPPORT_ABSTRACT_CONTROL_MANAGEMENT_CAPABILITIES_D2 //Send_Break command
 #define USB_CDC_SUPPORT_ABSTRACT_CONTROL_MANAGEMENT_CAPABILITIES_D1 //Set_Line_Coding, Set_Control_Line_State, Get_Line_Coding, and Serial_State commands
+
 /** DEFINITIONS ****************************************************/
 
-#define USE_INTERNAL_OSC
 #define self_power 1
 
 #endif //USBCFG_H
