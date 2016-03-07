@@ -33,12 +33,30 @@ static uint32_t wakeupCount = 0;
  * STATIC FUNCTION PROTOTYPES
  *******************************************************/
 
+static void waitMs(uint32_t milliseconds);
 static void appInit();
 static void appMain(void);
 
 /********************************************************
  * STATIC FUNCTIONS
  *******************************************************/
+
+/* Wait for a number of milliseconds (approximate) */
+static void waitMs(uint32_t milliseconds)
+{
+    /* Set up Timer0 to run from instruction cycles with 64 prescaler */
+    OPTION_REGbits.TMR0CS = 0;
+    OPTION_REGbits.PS = 0x5;
+    OPTION_REGbits.PSA = 0;
+
+    for (uint32_t x = 0; x < milliseconds; x++)
+    {
+        TMR0bits.TMR0 = 0;
+        INTCONbits.TMR0IF = 0;
+        while (!INTCONbits.TMR0IF) {};
+        INTCONbits.TMR0IF = 0;
+    }
+}
 
 /* Initialise the application code */
 static void appInit()
@@ -190,13 +208,6 @@ void main(void)
     /* Set up the watchdog timer to be software controlled */
     WDTCONbits.SWDTEN = 0;
 
-    /* Set up Timer0 to run from instruction cycles with 256 prescaler */
-    OPTION_REGbits.TMR0CS = 0;
-    OPTION_REGbits.PS = 0x7;
-    OPTION_REGbits.PSA = 0;
-
-    SYSTEM_Initialize(SYSTEM_STATE_USB_START);
-
     while (1)
     {
         WDTCONbits.WDTPS = 0x0c;
@@ -206,14 +217,12 @@ void main(void)
         WDTCONbits.SWDTEN = 0;
         wakeupCount++;
 
+        SYSTEM_Initialize(SYSTEM_STATE_USB_START);
+
         if (BUTTON_PIN_PORT)
         {
             LED_PIN_LAT = 1;
-
-            TMR0bits.TMR0 = 0;
-            INTCONbits.TMR0IF = 0;
-            while (!INTCONbits.TMR0IF) {};
-            INTCONbits.TMR0IF = 0;
+            waitMs(150);
             LED_PIN_LAT = 0;
         }
     }

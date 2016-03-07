@@ -66,7 +66,7 @@ please contact mla_licensing@microchip.com
  * USB 2.0 Spec Ref Table 9-4
  *******************************************************************/
 
-/* USB Device States as returned by USBGetDeviceState().  Only the defenitions
+/* USB Device States as returned by USBGetDeviceState().  Only the definitions
    for these states should be used.  The actual value for each state should
    not be relied upon as constant and may change based on the implementation. */
 typedef enum
