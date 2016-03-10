@@ -106,13 +106,21 @@ void SYSTEM_Initialize( SYSTEM_STATE state )
             break;
     }
 }
-			
+
 void interrupt SYS_InterruptHigh(void)
 {
 #if defined(USB_INTERRUPT)
+    /* Handle USB activity */
     if (PIR2bits.USBIF)
     {
         USBDeviceTasks();
     }
 #endif
+    
+    /* If there's been IO activity then
+     * disable the interrupt to avoid bounce */
+    if (INTCONbits.IOCIF)
+    {
+       INTCONbits.IOCIE = 0;
+    }
 }
